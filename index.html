@@ -1,32 +1,191 @@
-<!DOCTYPE html>
-<html lang="en-US">
+<html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>wang-ui</title>
-    <meta name="description" content="wang-ui 一套为开发者、设计师和产品经理准备的基于 Vue 2.0 的桌面端组件库">
-    <meta name="generator" content="VuePress 1.4.0">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    
-    <link rel="preload" href="/assets/css/0.styles.d7933b44.css" as="style"><link rel="preload" href="/assets/js/app.517b0947.js" as="script"><link rel="preload" href="/assets/js/2.55ee0218.js" as="script"><link rel="preload" href="/assets/js/11.b4c25117.js" as="script"><link rel="prefetch" href="/assets/js/10.2c28fc42.js"><link rel="prefetch" href="/assets/js/12.94208656.js"><link rel="prefetch" href="/assets/js/13.b96b2fb8.js"><link rel="prefetch" href="/assets/js/14.4565d61f.js"><link rel="prefetch" href="/assets/js/15.44793ad5.js"><link rel="prefetch" href="/assets/js/16.3ef049ab.js"><link rel="prefetch" href="/assets/js/17.e5920826.js"><link rel="prefetch" href="/assets/js/3.eeba40be.js"><link rel="prefetch" href="/assets/js/4.cbc97104.js"><link rel="prefetch" href="/assets/js/5.92ec84da.js"><link rel="prefetch" href="/assets/js/6.2f4dd61e.js"><link rel="prefetch" href="/assets/js/7.8b5d3695.js"><link rel="prefetch" href="/assets/js/8.3495b5bc.js"><link rel="prefetch" href="/assets/js/9.f6a6352a.js">
-    <link rel="stylesheet" href="/assets/css/0.styles.d7933b44.css">
+    <title>打开小程序</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+    <script>
+      window.onerror = e => {
+        console.error(e)
+        alert('发生错误' + e)
+      }
+    </script>
+    <!-- weui 样式 -->
+    <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/2.4.1/weui.min.css"></link>
+    <!-- 调试用的移动端 console -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/eruda"></script> -->
+    <!-- <script>eruda.init();</script> -->
+    <!-- 公众号 JSSDK -->
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+
+    <script>
+      function docReady(fn) {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          fn()
+        } else {
+          document.addEventListener('DOMContentLoaded', fn);
+        }
+      }
+
+      docReady(async function() {
+        var ua = navigator.userAgent.toLowerCase()
+        var isWXWork = ua.match(/wxwork/i) == 'wxwork'
+        var isWeixin = !isWXWork && ua.match(/micromessenger/i) == 'micromessenger'
+        var isMobile = false
+        var isDesktop = false
+        if (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|IEMobile)/i)) {
+          isMobile = true
+        } else {
+          isDesktop = true
+        }
+
+        if (isWeixin) {
+          var containerEl = document.getElementById('wechat-web-container')
+          containerEl.classList.remove('hidden')
+          containerEl.classList.add('full', 'wechat-web-container')
+
+          var launchBtn = document.getElementById('launch-btn')
+          launchBtn.addEventListener('ready', function (e) {
+            console.log('开放标签 ready')
+          })
+          launchBtn.addEventListener('launch', function (e) {
+            console.log('开放标签 success')
+          })
+          launchBtn.addEventListener('error', function (e) {
+            console.log('开放标签 fail', e.detail)
+          })
+
+          wx.config({
+            // debug: true, // 调试时可开启
+            appId: 'wxf00ec2cf5ebb9e6a', // <!-- replace -->
+            timestamp: 0, // 必填，填任意数字即可
+            nonceStr: '111', // 必填，填任意非空字符串即可
+            signature: '222', // 必填，填任意非空字符串即可
+            jsApiList: ['chooseImage'], // 必填，随意一个接口即可 
+            openTagList:['wx-open-launch-weapp'], // 填入打开小程序的开放标签名
+          })
+          wx.ready(function (res) {
+            // config信息验证后会执行ready方法，所有接口调用都必须在config接口获得结果之后，config是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在ready函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在ready函数中
+            console.log("注册按钮", res);
+          });
+          wx.error(function (res) {
+            // config信息验证失败会执行error函数，如签名过期导致验证失败，具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，对于SPA可以在这里更新签名
+            console.error("注册按钮发生错误", res);
+          });
+        } else if (isDesktop) {
+          // 在 pc 上则给提示引导到手机端打开
+          var containerEl = document.getElementById('desktop-web-container')
+          containerEl.classList.remove('hidden')
+          containerEl.classList.add('full', 'desktop-web-container')
+        }  else {
+          var containerEl = document.getElementById('public-web-container')
+          containerEl.classList.remove('hidden')
+          containerEl.classList.add('full', 'public-web-container')
+          
+          var buttonEl = document.getElementById('public-web-jump-button')
+          var buttonLoadingEl = document.getElementById('public-web-jump-button-loading')
+          try {
+            await openWeapp(() => {
+              buttonEl.classList.remove('weui-btn_loading')
+              buttonLoadingEl.classList.add('hidden')
+            })
+          } catch (e) {
+            buttonEl.classList.remove('weui-btn_loading')
+            buttonLoadingEl.classList.add('hidden')
+            throw e
+          }
+        }
+      })
+
+      async function openWeapp(onBeforeJump) {
+        if (onBeforeJump) {
+          onBeforeJump()
+        }
+        location.href = "weixin://dl/business/?t=g3QTBUUd7lh"
+      }
+    </script>
+    <style>
+      .hidden {
+        display: none;
+      }
+
+      .full {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+
+      .public-web-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .public-web-container p {
+        position: absolute;
+        top: 40%;
+      }
+
+      .public-web-container a {
+        position: absolute;
+        bottom: 40%;
+      }
+
+      .wechat-web-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .wechat-web-container p {
+        position: absolute;
+        top: 40%;
+      }
+
+      .wechat-web-container wx-open-launch-weapp {
+        position: absolute;
+        bottom: 40%;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .desktop-web-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .desktop-web-container p {
+        position: absolute;
+        top: 40%;
+      }
+    </style>
   </head>
   <body>
-    <div id="app" data-server-rendered="true"><div class="theme-container no-sidebar"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-exact-active router-link-active"><!----> <span class="site-name">wang-ui</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/" class="nav-link router-link-exact-active router-link-active">
-  主页
-</a></div><div class="nav-item"><a href="https://github.com/wjq1994/wang-vue-ui" target="_blank" rel="noopener noreferrer" class="nav-link external">
-  Github
-  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/" class="nav-link router-link-exact-active router-link-active">
-  主页
-</a></div><div class="nav-item"><a href="https://github.com/wjq1994/wang-vue-ui" target="_blank" rel="noopener noreferrer" class="nav-link external">
-  Github
-  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></div> <!----></nav>  <!----> </aside> <main aria-labelledby="main-title" class="home"><header class="hero"><img src="/tiger.jpg" alt="hero"> <h1 id="main-title">
-      wang-ui
-    </h1> <p class="description">
-      wang-ui 一套为开发者、设计师和产品经理准备的基于 Vue 2.0 的桌面端组件库
-    </p> <p class="action"><a href="/components/guide.html" class="nav-link action-button">
-  欢迎 →
-</a></p></header> <div class="features"><div class="feature"><h2>搭建自己的组件库</h2> <p>从0搭建自己的组件库</p></div></div> <div class="theme-default-content custom content__default"></div> <!----></main></div><div class="global-ui"></div></div>
-    <script src="/assets/js/app.517b0947.js" defer></script><script src="/assets/js/2.55ee0218.js" defer></script><script src="/assets/js/11.b4c25117.js" defer></script>
+    <div class="page full">
+      <div id="public-web-container" class="hidden">
+        <p class="">正在打开 调解云</p> <!-- replace -->
+        <a id="public-web-jump-button" href="javascript:" class="weui-btn weui-btn_primary weui-btn_loading" onclick="openWeapp()">
+          <span id="public-web-jump-button-loading" class="weui-primary-loading weui-primary-loading_transparent"><i class="weui-primary-loading__dot"></i></span>
+          打开小程序
+        </a>
+      </div>
+      <div id="wechat-web-container" class="hidden">
+        <p class="">点击以下按钮打开 调解云</p> <!-- replace -->
+        <!-- 跳转小程序的开放标签。文档 https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_Open_Tag.html -->
+        <wx-open-launch-weapp id="launch-btn" username="gh_74ec592ecaf6" path="/"> <!-- replace -->
+          <template>
+            <button style="width: 200px; height: 45px; text-align: center; font-size: 17px; display: block; margin: 0 auto; padding: 8px 24px; border: none; border-radius: 4px; background-color: #07c160; color:#fff;">打开小程序</button>
+          </template>
+        </wx-open-launch-weapp>
+      </div>
+      <div id="desktop-web-container" class="hidden">
+        <p class="">请在手机打开网页链接</p>
+      </div>
+    </div>
   </body>
 </html>
